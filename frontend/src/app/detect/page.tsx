@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2, Upload, SlidersHorizontal, AlertTriangle, Cpu } from "lucide-react";
 import ImageDropzone from "@/components/ImageDropzone";
 import DetectionCanvas from "@/components/DetectionCanvas";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 interface Detection {
   bbox: [number, number, number, number];
@@ -42,13 +45,15 @@ export default function DetectPage() {
       const formData = new FormData();
       formData.append("file", imgFile);
       
-      const response = await fetch(`/api/detect?confidence=${conf}`, {
+      const response = await fetch(`${API_BASE}/api/detect?confidence=${conf}`, {
         method: "POST",
         body: formData,
       });
       
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        let errorText = "";
+        try { errorText = await response.text(); } catch(e) {}
+        throw new Error(`API error ${response.status}: ${errorText.substring(0, 100)}`);
       }
       
       const data = await response.json();

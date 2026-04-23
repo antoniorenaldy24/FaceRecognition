@@ -7,6 +7,8 @@ import HoloCard from "@/components/face/HoloCard";
 import LivenessIndicator from "@/components/face/LivenessIndicator";
 import { Camera, Database, Shield, ScanLine, UserPlus, RefreshCw, Upload, Video } from "lucide-react";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+
 // Types
 interface Identity {
   name: string;
@@ -249,20 +251,31 @@ export default function FaceDashboard() {
   // --- Actions ---
   const fetchDatabase = async () => {
     try {
-      const res = await fetch("/api/face/database");
-      if (!res.ok) throw new Error("Backend offline");
+      const res = await fetch(`${API_BASE}/api/face/database`);
+      if (!res.ok) {
+        let errorText = "";
+        try { errorText = await res.text(); } catch(e) {}
+        throw new Error(`API error ${res.status}: ${errorText.substring(0, 100)}`);
+      }
       const data = await res.json();
       setIdentities(data.identities || []);
-    } catch (err) {
-      console.warn("Database fetch failed. Backend may be offline:", err);
+    } catch (err: any) {
+      console.warn("Database fetch failed. Backend may be offline:", err.message);
     }
   };
 
   const rebuildDatabase = async () => {
     setIsProcessingDB(true);
     try {
-      await fetch("/api/face/build-db", { method: "POST" });
+      const res = await fetch(`${API_BASE}/api/face/build-db`, { method: "POST" });
+      if (!res.ok) {
+        let errorText = "";
+        try { errorText = await res.text(); } catch(e) {}
+        alert(`API error ${res.status}: ${errorText.substring(0, 100)}`);
+      }
       fetchDatabase();
+    } catch (err: any) {
+      alert(`Network error: ${err.message}`);
     } finally {
       setIsProcessingDB(false);
     }
@@ -292,10 +305,16 @@ export default function FaceDashboard() {
         formData.append("file", blob, `reg_${i}.jpg`);
         formData.append("name", regName.trim());
         
-        const res = await fetch("/api/face/register", {
+        const res = await fetch(`${API_BASE}/api/face/register`, {
           method: "POST",
           body: formData,
         });
+        
+        if (!res.ok) {
+          let errorText = "";
+          try { errorText = await res.text(); } catch(e) {}
+          throw new Error(`API error ${res.status}: ${errorText.substring(0, 100)}`);
+        }
         
         if (res.ok) successCount++;
       } catch (err) {
@@ -339,10 +358,16 @@ export default function FaceDashboard() {
         const liveData = new FormData();
         frames.forEach((f, i) => liveData.append("frames", f, `frame_${i}.jpg`));
         
-        const liveRes = await fetch("/api/face/liveness-check", {
+        const liveRes = await fetch(`${API_BASE}/api/face/liveness-check`, {
           method: "POST",
           body: liveData,
         });
+        
+        if (!liveRes.ok) {
+          let errorText = "";
+          try { errorText = await liveRes.text(); } catch(e) {}
+          throw new Error(`Liveness API error ${liveRes.status}: ${errorText.substring(0, 100)}`);
+        }
         const liveDataJson = await liveRes.json();
         setLivenessResult(liveDataJson);
         
@@ -360,10 +385,16 @@ export default function FaceDashboard() {
       const formData = new FormData();
       formData.append("file", blob, "capture.jpg");
       
-      const res = await fetch(`/api/face/recognize?threshold=${threshold}`, {
+      const res = await fetch(`${API_BASE}/api/face/recognize?threshold=${threshold}`, {
         method: "POST",
         body: formData,
       });
+      
+      if (!res.ok) {
+        let errorText = "";
+        try { errorText = await res.text(); } catch(e) {}
+        throw new Error(`Recognize API error ${res.status}: ${errorText.substring(0, 100)}`);
+      }
       
       const data = await res.json();
       if (!res.ok) throw new Error("API Error");
