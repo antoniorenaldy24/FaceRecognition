@@ -132,7 +132,11 @@ export default function FaceDashboard() {
       
       // Use specific deviceId if it's not the generic "default"
       if (deviceId && deviceId !== "default" && deviceId !== "FILE") {
-        constraints.video = { ...constraints.video, deviceId: { exact: deviceId } } as MediaTrackConstraints;
+        constraints.video = { 
+          width: 1280, 
+          height: 720, 
+          deviceId: { exact: deviceId } 
+        };
       }
       
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
