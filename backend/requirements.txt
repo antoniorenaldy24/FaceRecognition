@@ -1,0 +1,39 @@
+# ============================================
+# ML Project - Modul 2 Requirements
+# GPU: NVIDIA GTX 1660 SUPER (CUDA 12.x)
+# ============================================
+
+# --- Core Deep Learning ---
+torch
+torchvision
+torchaudio
+timm
+
+# --- Web Server ---
+fastapi
+uvicorn[standard]
+python-multipart
+
+# --- Face Recognition ---
+insightface
+onnxruntime-gpu
+
+# --- Computer Vision ---
+opencv-python
+Pillow
+
+# --- Liveness Detection ---
+mediapipe
+
+# --- Data Science & Evaluation ---
+numpy
+scipy
+scikit-learn
+matplotlib
+seaborn
+tqdm
+pandas
+
+# --- Utilities ---
+python-dotenv
+pydantic

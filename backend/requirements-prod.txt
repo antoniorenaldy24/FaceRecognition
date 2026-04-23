@@ -1,0 +1,24 @@
+# requirements-prod.txt
+# CPU-only dependencies for Hugging Face Spaces (Free Tier 16GB)
+
+fastapi>=0.100.0
+uvicorn>=0.23.0
+python-multipart>=0.0.6
+pydantic>=2.0.0
+numpy<2.0.0
+
+# InsightFace & Core ML
+insightface==0.7.3
+onnxruntime==1.16.3  # CPU ONLY
+
+# PyTorch (CPU ONLY) - Greatly reduces image size
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.0.0+cpu
+torchvision>=0.15.0+cpu
+
+# MediaPipe & OpenCV
+mediapipe>=0.10.0
+opencv-python-headless>=4.8.0
+
+# FastAPI CORS
+starlette>=0.27.0
