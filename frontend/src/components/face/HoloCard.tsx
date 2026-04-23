@@ -56,11 +56,11 @@ export default function HoloCard({ name, similarity, isMatch, message, alignedFa
           rotateX,
           rotateY,
           transformStyle: "preserve-3d",
+          borderColor: `${color}40`,
         }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         className={`relative w-full rounded-2xl border p-8 backdrop-blur-xl bg-gradient-to-br ${bgGradient} overflow-hidden shadow-2xl`}
-        style={{ borderColor: `${color}40` } as any}
       >
         {/* Holographic reflection effect */}
         <div className="absolute inset-0 z-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ transform: "translateZ(1px)" }} />
