@@ -13,8 +13,9 @@ COPY backend/requirements-prod.txt /app/requirements.txt
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend source code and weights
+# Copy backend source code and training module
 COPY backend /app/backend
+COPY training /app/training
 
 # Set environment variables for InsightFace to download models if needed
 ENV INSIGHTFACE_HOME=/app/backend/weights/insightface
