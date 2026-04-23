@@ -58,8 +58,10 @@ async def lifespan(app: FastAPI):
     # 2. Initialize Face Recognition engine
     print("\n[Startup] Initializing InsightFace...")
     try:
+        import torch
+        ctx_id = 0 if torch.cuda.is_available() else -1
         face_engine = FaceEngine.get_instance()
-        face_engine.initialize(ctx_id=0)  # GPU
+        face_engine.initialize(ctx_id=ctx_id)
     except Exception as e:
         print(f"[Startup] Face engine init failed (non-critical): {e}")
         print("[Startup] Face recognition will be unavailable.")

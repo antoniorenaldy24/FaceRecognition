@@ -6,6 +6,7 @@ Endpoint for Faster R-CNN object detection.
 
 from fastapi import APIRouter, File, Query, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi.concurrency import run_in_threadpool
 
 from ..services.inference import DetectionService
 
@@ -59,7 +60,8 @@ async def detect_objects(
     image_bytes = await file.read()
 
     # Run detection
-    result = await detection_service.detect_objects(
+    result = await run_in_threadpool(
+        detection_service.detect_objects,
         image_bytes=image_bytes,
         confidence_threshold=confidence,
     )

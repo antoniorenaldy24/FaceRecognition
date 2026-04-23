@@ -13,6 +13,7 @@ import cv2
 import numpy as np
 from fastapi import APIRouter, File, Form, Query, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 
 from ..models.face_engine import FaceEngine, LivenessDetector
@@ -79,7 +80,7 @@ async def recognize_face(
         return JSONResponse(status_code=400, content={"error": "Invalid image"})
 
     engine = FaceEngine.get_instance()
-    faces = engine.detect_faces(image)
+    faces = await run_in_threadpool(engine.detect_faces, image)
 
     if not faces:
         return JSONResponse(
@@ -139,7 +140,7 @@ async def register_face(
 
     # Verify a face exists in the image
     engine = FaceEngine.get_instance()
-    faces = engine.detect_faces(image)
+    faces = await run_in_threadpool(engine.detect_faces, image)
     if not faces:
         return JSONResponse(
             status_code=400,
@@ -228,7 +229,7 @@ async def check_liveness(
 
     # Run liveness check
     detector = get_liveness_detector()
-    is_live, metadata = detector.check_liveness(frame_images)
+    is_live, metadata = await run_in_threadpool(detector.check_liveness, frame_images)
 
     return {
         "is_live": is_live,
