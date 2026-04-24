@@ -56,7 +56,6 @@ export default function HomePage() {
       duration: 1,
       stagger: 0.2,
       ease: "back.out(1.7)",
-      clearProps: "all"
     });
 
     // Animate Buttons
@@ -66,7 +65,6 @@ export default function HomePage() {
       duration: 0.6,
       stagger: 0.1,
       ease: "elastic.out(1, 0.5)",
-      clearProps: "all"
     }, "-=0.4");
 
     // Animate Feature Cards
@@ -76,7 +74,6 @@ export default function HomePage() {
       duration: 0.8,
       stagger: 0.15,
       ease: "back.out(1.2)",
-      clearProps: "all"
     }, "-=0.2");
     
     // Floating animation for icons inside cards

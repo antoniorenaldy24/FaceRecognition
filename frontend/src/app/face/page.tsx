@@ -66,9 +66,9 @@ export default function FaceDashboard() {
 
   // Entrance animations
   useGSAP(() => {
-    gsap.to(".neo-header", { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.5)", clearProps: "all" });
-    gsap.to(".neo-panel", { x: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power2.out", clearProps: "all" });
-    gsap.to(".neo-camera", { scale: 1, opacity: 1, duration: 0.8, ease: "elastic.out(1, 0.5)", clearProps: "all" });
+    gsap.to(".neo-header", { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.5)" });
+    gsap.to(".neo-panel", { x: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power2.out" });
+    gsap.to(".neo-camera", { scale: 1, opacity: 1, duration: 0.8, ease: "elastic.out(1, 0.5)" });
   }, { scope: containerRef });
 
   useEffect(() => {

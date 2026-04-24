@@ -42,7 +42,6 @@ export default function DetectPage() {
       duration: 0.8,
       stagger: 0.2,
       ease: "back.out(1.5)",
-      clearProps: "all"
     });
 
     tl.to(".card-anim", {
@@ -51,7 +50,6 @@ export default function DetectPage() {
       duration: 0.6,
       stagger: 0.2,
       ease: "back.out(1.2)",
-      clearProps: "all"
     }, "-=0.4");
   }, { scope: containerRef });
 
@@ -66,7 +64,6 @@ export default function DetectPage() {
           duration: 0.5,
           stagger: 0.1,
           ease: "back.out(1.2)",
-          clearProps: "all"
         }
       );
     }
