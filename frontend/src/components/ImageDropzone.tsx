@@ -55,9 +55,8 @@ export default function ImageDropzone({ onImageDrop, isLoading }: ImageDropzoneP
 
   return (
     <div
-      className={`dropzone-neo relative w-full h-80 flex flex-col items-center justify-center p-6 ${
-        isDragActive ? "active" : ""
-      } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
+      className={`dropzone-neo relative w-full min-h-[320px] py-12 flex flex-col items-center justify-center p-6 ${isDragActive ? "active" : ""
+        } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
       onDragEnter={handleDragEnter}
       onDragOver={handleDragEnter}
       onDragLeave={handleDragLeave}
@@ -98,7 +97,7 @@ export default function ImageDropzone({ onImageDrop, isLoading }: ImageDropzoneP
         </div>
       ) : (
         <div className="text-center z-10 flex flex-col items-center">
-          <div className="w-24 h-24 mb-6 rounded-full bg-[var(--primary)] flex items-center justify-center text-black border-4 border-black shadow-[4px_4px_0px_black] animate-bounce">
+          <div className="w-24 h-24 mb-2 mt-4 rounded-full bg-[var(--primary)] flex items-center justify-center text-black border-4 border-black shadow-[4px_4px_0px_black] animate-bounce">
             <UploadCloud size={40} strokeWidth={3} />
           </div>
           <p className="text-2xl font-black text-black mb-2">

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Camera, Focus, ScanFace, Menu, X } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -13,8 +13,14 @@ export default function Navbar() {
   const navRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [pathname]);
+
   useGSAP(() => {
-    // Entrance animation
     gsap.from(navRef.current, {
       y: -100,
       opacity: 0,
@@ -22,7 +28,6 @@ export default function Navbar() {
       ease: "elastic.out(1, 0.5)",
     });
 
-    // Logo continuous playful bounce
     gsap.to(logoRef.current, {
       y: -5,
       rotation: 5,
@@ -41,8 +46,7 @@ export default function Navbar() {
   return (
     <nav ref={navRef} className="sticky top-0 z-50 p-4">
       <div className="max-w-7xl mx-auto neo-card bg-white px-6 py-4 flex items-center justify-between">
-        
-        {/* Logo */}
+
         <Link href="/" className="flex items-center gap-3 group">
           <div ref={logoRef} className="bg-[var(--primary)] text-black p-2 rounded-xl border-2 border-black shadow-[2px_2px_0px_black] group-hover:bg-[var(--accent-pink)] transition-colors">
             <Camera size={28} strokeWidth={2.5} />
@@ -52,7 +56,6 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-4">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
@@ -62,8 +65,8 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={`px-5 py-2.5 rounded-full font-bold border-2 border-black flex items-center gap-2 transition-all duration-300
-                  ${isActive 
-                    ? "bg-[var(--primary)] shadow-[4px_4px_0px_black] translate-x-[-2px] translate-y-[-2px]" 
+                  ${isActive
+                    ? "bg-[var(--primary)] shadow-[4px_4px_0px_black] translate-x-[-2px] translate-y-[-2px]"
                     : "bg-white hover:bg-[var(--primary-light)] hover:shadow-[4px_4px_0px_black] hover:translate-x-[-2px] hover:translate-y-[-2px]"}
                 `}
               >
@@ -74,7 +77,6 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* Mobile Menu Toggle */}
         <button
           className="md:hidden p-2 rounded-xl border-2 border-black bg-[var(--primary)] shadow-[2px_2px_0px_black] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_black] transition-all"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -83,7 +85,6 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
         <div className="md:hidden mt-4 neo-card bg-white p-4 flex flex-col gap-3 animate-fade-in-up">
           {navLinks.map((link) => {

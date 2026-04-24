@@ -140,7 +140,7 @@ export default function DetectPage() {
           </div>
 
           <div className="card-anim opacity-0 scale-90 neo-card p-6 bg-[var(--accent-pink)]">
-            <h2 className="text-2xl font-black text-white mb-4 drop-shadow-[2px_2px_0px_black]">Pengaturan 🎛️</h2>
+            <h2 className="text-2xl font-black text-black mb-4">Pengaturan 🎛️</h2>
             
             <div className="mb-4 bg-white p-4 rounded-xl border-4 border-black shadow-[4px_4px_0px_black]">
               <div className="flex justify-between mb-2">
