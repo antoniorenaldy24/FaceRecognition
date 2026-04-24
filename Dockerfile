@@ -9,7 +9,6 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     libgomp1 \
     libstdc++6 \
-    execstack \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy backend requirements
@@ -17,9 +16,6 @@ COPY backend/requirements-prod.txt /app/requirements.txt
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Fix onnxruntime executable stack issue (known bug in some linux kernels/wheels)
-RUN execstack -c /usr/local/lib/python3.10/site-packages/onnxruntime/capi/*.so || true
 
 # Copy backend source code and training module
 COPY backend /app/backend

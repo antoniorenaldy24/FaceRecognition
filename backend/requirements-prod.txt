@@ -9,7 +9,7 @@ numpy<2.0.0
 
 # InsightFace & Core ML
 insightface==0.7.3
-onnxruntime==1.16.3  # CPU ONLY
+onnxruntime>=1.20.0  # CPU ONLY
 
 # PyTorch (CPU ONLY) - Greatly reduces image size
 --extra-index-url https://download.pytorch.org/whl/cpu
