@@ -19,6 +19,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend /app/backend
 COPY training /app/training
 
+# Create non-root user expected by Hugging Face Spaces
+RUN useradd -m -u 1000 user && \
+    mkdir -p /app/backend/weights/insightface && \
+    mkdir -p /app/backend/known_faces && \
+    chown -R user:user /app
+
+USER user
+
 # Set environment variables for InsightFace to download models if needed
 ENV INSIGHTFACE_HOME=/app/backend/weights/insightface
 ENV PYTHONPATH=/app
