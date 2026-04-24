@@ -25,7 +25,7 @@ from typing import Dict, List, Optional, Tuple
 
 import cv2
 import numpy as np
-import mediapipe as mp
+import mediapipe.python.solutions.face_mesh as mp_face_mesh
 
 
 class FaceEngine:
@@ -170,7 +170,7 @@ class LivenessDetector:
 
     def initialize(self) -> None:
         """Initialize MediaPipe Face Mesh."""
-        self.face_mesh = mp.solutions.face_mesh.FaceMesh(
+        self.face_mesh = mp_face_mesh.FaceMesh(
             max_num_faces=1,
             refine_landmarks=True,
             min_detection_confidence=0.5,
