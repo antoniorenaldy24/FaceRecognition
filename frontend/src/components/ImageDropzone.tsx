@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { UploadCloud } from "lucide-react";
 
 interface ImageDropzoneProps {
   onImageDrop: (file: File) => void;
@@ -54,7 +55,7 @@ export default function ImageDropzone({ onImageDrop, isLoading }: ImageDropzoneP
 
   return (
     <div
-      className={`dropzone relative w-full h-80 flex flex-col items-center justify-center p-6 ${
+      className={`dropzone-neo relative w-full h-80 flex flex-col items-center justify-center p-6 ${
         isDragActive ? "active" : ""
       } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
       onDragEnter={handleDragEnter}
@@ -76,36 +77,38 @@ export default function ImageDropzone({ onImageDrop, isLoading }: ImageDropzoneP
           <img
             src={previewUrl}
             alt="Preview"
-            className="w-full h-full object-contain rounded-lg opacity-30"
+            className="w-full h-full object-contain rounded-xl opacity-40 border-4 border-black"
           />
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {isLoading ? (
-              <div className="flex flex-col items-center">
-                <div className="spinner mb-4"></div>
-                <p className="text-[var(--primary-light)] font-medium text-lg shadow-black drop-shadow-md">
-                  Analyzing Image...
+              <div className="flex flex-col items-center bg-white border-4 border-black p-4 rounded-xl shadow-[4px_4px_0px_black]">
+                <div className="spinner-dots mb-4">
+                  <div></div><div></div><div></div>
+                </div>
+                <p className="font-black text-lg text-black">
+                  Sedang Menganalisis...
                 </p>
               </div>
             ) : (
-              <div className="bg-[var(--surface)]/80 p-4 rounded-xl backdrop-blur-md text-center cursor-pointer hover:bg-[var(--surface)] transition-colors border border-[var(--border)]">
-                <p className="font-semibold text-white">Click or drag to replace</p>
+              <div className="bg-[var(--primary)] p-4 rounded-xl text-center cursor-pointer hover:bg-[var(--primary-light)] transition-colors border-4 border-black shadow-[4px_4px_0px_black] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_black]">
+                <p className="font-black text-black">Klik atau Tarik untuk mengganti</p>
               </div>
             )}
           </div>
         </div>
       ) : (
-        <div className="text-center z-10">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[var(--surface-hover)] flex items-center justify-center text-4xl shadow-inner border border-[var(--border)]">
-            📸
+        <div className="text-center z-10 flex flex-col items-center">
+          <div className="w-24 h-24 mb-6 rounded-full bg-[var(--primary)] flex items-center justify-center text-black border-4 border-black shadow-[4px_4px_0px_black] animate-bounce">
+            <UploadCloud size={40} strokeWidth={3} />
           </div>
-          <p className="text-xl font-bold text-white mb-2">
-            Drag & Drop an image here
+          <p className="text-2xl font-black text-black mb-2">
+            Tarik & Lepas gambar di sini!
           </p>
-          <p className="text-[var(--text-muted)] text-sm mb-6">
-            Supports JPEG, PNG, WEBP (Max 5MB)
+          <p className="text-gray-600 font-bold text-sm mb-6 bg-gray-100 px-4 py-1 rounded-full border-2 border-black">
+            Mendukung JPEG, PNG, WEBP (Maks 5MB)
           </p>
-          <button className="btn-secondary rounded-full px-6 py-2 text-sm pointer-events-none">
-            Browse Files
+          <button className="btn-neo bg-[var(--secondary)] text-white pointer-events-none">
+            Cari Berkas 📂
           </button>
         </div>
       )}

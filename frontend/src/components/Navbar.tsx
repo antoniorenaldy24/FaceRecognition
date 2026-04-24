@@ -2,99 +2,109 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-
-const navLinks = [
-  { href: "/", label: "Home", icon: "🏠" },
-  { href: "/detect", label: "Object Detection", icon: "🎯" },
-  { href: "/face", label: "Face Recognition", icon: "👤" },
-];
+import { Camera, Focus, ScanFace, Menu, X } from "lucide-react";
+import { useState, useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    // Entrance animation
+    gsap.from(navRef.current, {
+      y: -100,
+      opacity: 0,
+      duration: 1,
+      ease: "elastic.out(1, 0.5)",
+    });
+
+    // Logo continuous playful bounce
+    gsap.to(logoRef.current, {
+      y: -5,
+      rotation: 5,
+      duration: 1.5,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut",
+    });
+  }, { scope: navRef });
+
+  const navLinks = [
+    { href: "/detect", label: "Deteksi Objek", icon: Focus },
+    { href: "/face", label: "Pengenalan Wajah", icon: ScanFace },
+  ];
 
   return (
-    <nav className="sticky top-0 z-50 glass-card border-b border-[var(--border)]">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-110 transition-transform">
-              ML
-            </div>
-            <span className="font-bold text-lg tracking-tight">
-              Vision<span className="text-[var(--primary-light)]">Lab</span>
-            </span>
-          </Link>
+    <nav ref={navRef} className="sticky top-0 z-50 p-4">
+      <div className="max-w-7xl mx-auto neo-card bg-white px-6 py-4 flex items-center justify-between">
+        
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-3 group">
+          <div ref={logoRef} className="bg-[var(--primary)] text-black p-2 rounded-xl border-2 border-black shadow-[2px_2px_0px_black] group-hover:bg-[var(--accent-pink)] transition-colors">
+            <Camera size={28} strokeWidth={2.5} />
+          </div>
+          <span className="text-2xl font-black tracking-tight text-black">
+            Visi<span className="text-[var(--secondary)]">Mesin</span>
+          </span>
+        </Link>
 
-          {/* Desktop Links */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-4">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            const Icon = link.icon;
+            return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
-                  pathname === link.href
-                    ? "bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary-glow)]"
-                    : "text-[var(--text-muted)] hover:text-white hover:bg-[var(--surface-hover)]"
-                }`}
+                className={`px-5 py-2.5 rounded-full font-bold border-2 border-black flex items-center gap-2 transition-all duration-300
+                  ${isActive 
+                    ? "bg-[var(--primary)] shadow-[4px_4px_0px_black] translate-x-[-2px] translate-y-[-2px]" 
+                    : "bg-white hover:bg-[var(--primary-light)] hover:shadow-[4px_4px_0px_black] hover:translate-x-[-2px] hover:translate-y-[-2px]"}
+                `}
               >
-                <span>{link.icon}</span>
+                <Icon size={20} strokeWidth={isActive ? 3 : 2} />
                 {link.label}
               </Link>
-            ))}
-          </div>
-
-          {/* Status Badge */}
-          <div className="hidden md:flex items-center gap-2">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--surface)] border border-[var(--border)] text-xs">
-              <span className="w-2 h-2 rounded-full bg-[var(--accent-green)] animate-pulse-glow"></span>
-              <span className="text-[var(--text-muted)]">API Online</span>
-            </div>
-          </div>
-
-          {/* Mobile toggle */}
-          <button
-            className="md:hidden p-2 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              {mobileOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
+            );
+          })}
         </div>
 
-        {/* Mobile Menu */}
-        {mobileOpen && (
-          <div className="md:hidden pb-4 space-y-1">
-            {navLinks.map((link) => (
+        {/* Mobile Menu Toggle */}
+        <button
+          className="md:hidden p-2 rounded-xl border-2 border-black bg-[var(--primary)] shadow-[2px_2px_0px_black] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_black] transition-all"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {/* Mobile Menu Dropdown */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden mt-4 neo-card bg-white p-4 flex flex-col gap-3 animate-fade-in-up">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            const Icon = link.icon;
+            return (
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className={`block px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  pathname === link.href
-                    ? "bg-[var(--primary)] text-white"
-                    : "text-[var(--text-muted)] hover:text-white hover:bg-[var(--surface-hover)]"
-                }`}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`p-4 rounded-xl font-bold border-2 border-black flex items-center gap-3
+                  ${isActive ? "bg-[var(--primary)]" : "bg-gray-50"}
+                `}
               >
-                <span className="mr-2">{link.icon}</span>
-                {link.label}
+                <Icon size={24} />
+                <span className="text-lg">{link.label}</span>
               </Link>
-            ))}
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </nav>
   );
 }

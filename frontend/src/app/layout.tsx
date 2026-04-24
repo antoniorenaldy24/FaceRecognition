@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Nunito } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 
-const inter = Inter({
+const nunito = Nunito({
   subsets: ["latin"],
-  variable: "--font-inter",
-  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-nunito",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -29,9 +29,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.variable} antialiased`}>
-        <div className="min-h-screen bg-mesh">
+    <html lang="id" className="light">
+      <body className={`${nunito.variable} antialiased bg-[var(--background)] font-sans`}>
+        <div className="min-h-screen">
           <Navbar />
           <main>{children}</main>
         </div>

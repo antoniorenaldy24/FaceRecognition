@@ -1,7 +1,5 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { Activity } from "lucide-react";
+import React from "react";
+import { ShieldAlert, ShieldCheck, Eye } from "lucide-react";
 
 interface LivenessIndicatorProps {
   isActive: boolean;
@@ -12,56 +10,29 @@ interface LivenessIndicatorProps {
 export default function LivenessIndicator({ isActive, isLive, message }: LivenessIndicatorProps) {
   if (!isActive) return null;
 
-  // Determine color based on status
-  let color = "var(--secondary)"; // scanning
-  if (isLive === true) color = "var(--accent-green)";
-  else if (isLive === false) color = "var(--accent-rose)";
+  let bgClass = "bg-white text-black";
+  let icon = <Eye className="w-8 h-8 text-[var(--secondary)] animate-bounce" />;
+  
+  if (isLive === true) {
+    bgClass = "bg-[var(--accent-green)] text-white";
+    icon = <ShieldCheck className="w-8 h-8 text-white" />;
+  } else if (isLive === false) {
+    bgClass = "bg-[var(--accent-rose)] text-white";
+    icon = <ShieldAlert className="w-8 h-8 text-white animate-pulse" />;
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-[var(--surface-hover)] rounded-2xl border border-[var(--border)] relative overflow-hidden">
-      {/* Background glow */}
-      <div 
-        className="absolute inset-0 opacity-10" 
-        style={{ background: `radial-gradient(circle at center, ${color} 0%, transparent 70%)` }} 
-      />
-
-      <div className="flex items-center gap-4 relative z-10">
-        {/* Pulse Ring */}
-        <div className="relative flex items-center justify-center w-12 h-12">
-          {isLive === null && (
-            <>
-              <motion.div
-                className="absolute inset-0 rounded-full border-2"
-                style={{ borderColor: color }}
-                animate={{ scale: [1, 2], opacity: [1, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
-              />
-              <motion.div
-                className="absolute inset-0 rounded-full border-2"
-                style={{ borderColor: color }}
-                animate={{ scale: [1, 2], opacity: [1, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut", delay: 0.75 }}
-              />
-            </>
-          )}
-          <div className="relative w-10 h-10 rounded-full bg-[var(--surface)] border flex items-center justify-center shadow-lg" style={{ borderColor: color }}>
-            <Activity className="w-5 h-5" style={{ color }} />
-          </div>
-        </div>
-
-        <div>
-          <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-1 flex items-center gap-2">
-            Bio-Metric Scanner
-            {isLive !== null && (
-              <span className="text-xs px-2 py-0.5 rounded bg-black/50" style={{ color }}>
-                {isLive ? "PASSED" : "FAILED"}
-              </span>
-            )}
-          </h4>
-          <p className="text-xs text-[var(--text-muted)] font-mono">
-            {message || "Monitoring for vital signs..."}
-          </p>
-        </div>
+    <div className={`neo-card flex items-center gap-4 p-4 border-4 border-black shadow-[4px_4px_0px_black] ${bgClass}`}>
+      <div className="p-2 bg-white rounded-xl border-4 border-black shadow-[2px_2px_0px_black] rotate-3">
+        {icon}
+      </div>
+      <div>
+        <h3 className="font-black text-xl uppercase drop-shadow-[1px_1px_0px_black] text-inherit">
+          {isLive === true ? "Wajah Asli! ✅" : isLive === false ? "Wajah Palsu! ❌" : "Deteksi Kedipan 👀"}
+        </h3>
+        <p className="text-sm font-bold opacity-90 mt-1">
+          {message}
+        </p>
       </div>
     </div>
   );

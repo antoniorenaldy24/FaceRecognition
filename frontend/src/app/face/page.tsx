@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import ScannerHUD from "@/components/face/ScannerHUD";
 import HoloCard from "@/components/face/HoloCard";
 import LivenessIndicator from "@/components/face/LivenessIndicator";
-import { Camera, Database, Shield, ScanLine, UserPlus, RefreshCw, Upload, Video } from "lucide-react";
+import { Camera, Database, ScanFace, UserPlus, RefreshCw, Upload, Video } from "lucide-react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://renaldyant-facerecognition-api.hf.space";
 
@@ -39,8 +40,9 @@ export default function FaceDashboard() {
   
   // Media refs
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null); // For capturing frames
-  const overlayCanvasRef = useRef<HTMLCanvasElement>(null); // For drawing bounding boxes
+  const canvasRef = useRef<HTMLCanvasElement>(null); 
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null); 
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // State
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
@@ -62,32 +64,36 @@ export default function FaceDashboard() {
   const [regName, setRegName] = useState("");
   const [isProcessingDB, setIsProcessingDB] = useState(false);
 
-  // Auto-resize overlay canvas to match video display size
+  // Entrance animations
+  useGSAP(() => {
+    gsap.from(".neo-header", { y: -50, opacity: 0, duration: 0.8, ease: "back.out(1.5)" });
+    gsap.from(".neo-panel", { x: 50, opacity: 0, duration: 0.8, stagger: 0.1, ease: "power2.out" });
+    gsap.from(".neo-camera", { scale: 0.9, opacity: 0, duration: 0.8, ease: "elastic.out(1, 0.5)" });
+  }, { scope: containerRef });
+
   useEffect(() => {
     const handleResize = () => {
       if (videoRef.current && overlayCanvasRef.current) {
         overlayCanvasRef.current.width = videoRef.current.clientWidth;
         overlayCanvasRef.current.height = videoRef.current.clientHeight;
-        drawBoundingBoxes(matchResults); // redraw on resize
+        drawBoundingBoxes(matchResults); 
       }
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [matchResults]);
 
-  // Fetch DB on mount
   useEffect(() => {
     fetchDatabase();
   }, []);
 
   const requestCameraPermission = async () => {
     setIsRequestingCamera(true);
-    setHudMessage("REQUESTING PERMISSION...");
+    setHudMessage("Meminta izin kamera...");
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("navigator.mediaDevices is undefined");
       }
-      // Request permission with user interaction
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       stream.getTracks().forEach(t => t.stop());
       
@@ -103,42 +109,31 @@ export default function FaceDashboard() {
     } catch (err) {
       console.error("Permission denied or no devices:", err);
       if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        setHudMessage("SECURITY_BLOCK: MUST USE LOCALHOST OR HTTPS FOR WEBCAM");
+        setHudMessage("KEAMANAN BROWSER: HARUS PAKAI HTTPS/LOCALHOST");
       } else {
-        setHudMessage("CAMERA_ACCESS_DENIED_OR_NOT_FOUND");
-        // Also alert user so it's obvious it was clicked
-        alert("Gagal mengakses kamera! Pastikan kamera terhubung dan browser Anda memberi izin akses kamera.");
+        setHudMessage("Kamera tidak ditemukan atau ditolak.");
+        alert("Gagal mengakses kamera! Pastikan kamera terhubung dan browser Anda memberi izin.");
       }
-      setSelectedDeviceId("default"); // Fallback
+      setSelectedDeviceId("default"); 
     } finally {
       setIsRequestingCamera(false);
     }
   };
 
-  // Handle stream switching
   useEffect(() => {
-    if (videoFile) return; // Ignore if playing local video file
+    if (videoFile) return; 
     if (selectedDeviceId) {
       startCamera(selectedDeviceId);
     }
     return () => stopCamera();
   }, [selectedDeviceId, videoFile]);
 
-  // --- Media Helpers ---
   const startCamera = async (deviceId: string) => {
     stopCamera();
     try {
-      const constraints: MediaStreamConstraints = {
-        video: { width: 1280, height: 720 },
-      };
-      
-      // Use specific deviceId if it's not the generic "default"
+      const constraints: MediaStreamConstraints = { video: { width: 1280, height: 720 } };
       if (deviceId && deviceId !== "default" && deviceId !== "FILE") {
-        constraints.video = { 
-          width: 1280, 
-          height: 720, 
-          deviceId: { exact: deviceId } 
-        };
+        constraints.video = { width: 1280, height: 720, deviceId: { exact: deviceId } };
       }
       
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -154,9 +149,8 @@ export default function FaceDashboard() {
         };
       }
     } catch (err) {
-      console.error("Webcam error:", err);
       setHudStatus("failed");
-      setHudMessage("CAMERA_ACCESS_DENIED");
+      setHudMessage("AKSES KAMERA DITOLAK");
     }
   };
 
@@ -188,7 +182,6 @@ export default function FaceDashboard() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     
-    // We must use videoWidth/videoHeight (actual resolution), not clientWidth
     canvas.width = video.videoWidth || 1280;
     canvas.height = video.videoHeight || 720;
     
@@ -209,7 +202,6 @@ export default function FaceDashboard() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Map natural video dimensions to displayed dimensions
     const videoObj = videoRef.current;
     const scaleX = canvas.width / (videoObj.videoWidth || 1280);
     const scaleY = canvas.height / (videoObj.videoHeight || 720);
@@ -219,48 +211,39 @@ export default function FaceDashboard() {
       const w = x2 - x1;
       const h = y2 - y1;
 
-      // Draw bracket corners
-      const color = res.is_match ? "#10b981" : "#f43f5e"; // green or red
+      const color = res.is_match ? "#48BB78" : "#F56565"; 
       ctx.strokeStyle = color;
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 4;
 
       const px = x1 * scaleX;
       const py = y1 * scaleY;
       const pw = w * scaleX;
       const ph = h * scaleY;
-      const len = 15; // bracket length
 
-      ctx.beginPath();
-      // Top left
-      ctx.moveTo(px, py + len); ctx.lineTo(px, py); ctx.lineTo(px + len, py);
-      // Top right
-      ctx.moveTo(px + pw - len, py); ctx.lineTo(px + pw, py); ctx.lineTo(px + pw, py + len);
-      // Bottom left
-      ctx.moveTo(px, py + ph - len); ctx.lineTo(px, py + ph); ctx.lineTo(px + len, py + ph);
-      // Bottom right
-      ctx.moveTo(px + pw - len, py + ph); ctx.lineTo(px + pw, py + ph); ctx.lineTo(px + pw, py + ph - len);
-      ctx.stroke();
-
-      // Label text
-      ctx.font = "12px monospace";
+      // Playful thick boxes
+      ctx.strokeRect(px, py, pw, ph);
+      
+      // Label
+      const text = `${res.name || "TIDAK DIKENAL"} ${(res.similarity * 100).toFixed(0)}%`;
+      ctx.font = "900 16px Nunito";
+      const tWidth = ctx.measureText(text).width;
+      
       ctx.fillStyle = color;
-      ctx.fillText(`${res.name || "UNKNOWN"} ${(res.similarity * 100).toFixed(0)}%`, px, py - 5);
+      ctx.fillRect(px - 2, py - 24, tWidth + 16, 24);
+      
+      ctx.fillStyle = "white";
+      ctx.fillText(text, px + 6, py - 6);
     });
   };
 
-  // --- Actions ---
   const fetchDatabase = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/face/database`);
-      if (!res.ok) {
-        let errorText = "";
-        try { errorText = await res.text(); } catch(e) {}
-        throw new Error(`API error ${res.status}: ${errorText.substring(0, 100)}`);
-      }
+      if (!res.ok) throw new Error("API Error");
       const data = await res.json();
       setIdentities(data.identities || []);
-    } catch (err: any) {
-      console.warn("Database fetch failed. Backend may be offline:", err.message);
+    } catch (err) {
+      console.warn("Database fetch failed.");
     }
   };
 
@@ -268,14 +251,10 @@ export default function FaceDashboard() {
     setIsProcessingDB(true);
     try {
       const res = await fetch(`${API_BASE}/api/face/build-db`, { method: "POST" });
-      if (!res.ok) {
-        let errorText = "";
-        try { errorText = await res.text(); } catch(e) {}
-        alert(`API error ${res.status}: ${errorText.substring(0, 100)}`);
-      }
+      if (!res.ok) throw new Error("API Error");
       fetchDatabase();
     } catch (err: any) {
-      alert(`Network error: ${err.message}`);
+      alert(`Gagal kompilasi: ${err.message}`);
     } finally {
       setIsProcessingDB(false);
     }
@@ -286,16 +265,16 @@ export default function FaceDashboard() {
     setHudStatus("scanning");
     
     const instructions = [
-      "LOOK STRAIGHT", "LOOK STRAIGHT", "LOOK STRAIGHT", "LOOK STRAIGHT",
-      "TURN HEAD LEFT 30°", "TURN HEAD LEFT 30°", "TURN HEAD LEFT 30°",
-      "TURN HEAD RIGHT 30°", "TURN HEAD RIGHT 30°", "TURN HEAD RIGHT 30°"
+      "LIHAT LURUS", "LIHAT LURUS", "LIHAT LURUS", "LIHAT LURUS",
+      "TENGOK KIRI 30°", "TENGOK KIRI 30°", "TENGOK KIRI 30°",
+      "TENGOK KANAN 30°", "TENGOK KANAN 30°", "TENGOK KANAN 30°"
     ];
 
     let successCount = 0;
 
     for (let i = 0; i < instructions.length; i++) {
-      setHudMessage(`GUIDED ENROLLMENT [${i+1}/10]: ${instructions[i]}`);
-      await new Promise((r) => setTimeout(r, 1000)); // Wait 1s per pose
+      setHudMessage(`PENDAFTARAN [${i+1}/10]: ${instructions[i]}`);
+      await new Promise((r) => setTimeout(r, 1000)); 
       
       try {
         const blob = await captureFrameAsync();
@@ -310,12 +289,6 @@ export default function FaceDashboard() {
           body: formData,
         });
         
-        if (!res.ok) {
-          let errorText = "";
-          try { errorText = await res.text(); } catch(e) {}
-          throw new Error(`API error ${res.status}: ${errorText.substring(0, 100)}`);
-        }
-        
         if (res.ok) successCount++;
       } catch (err) {
         console.error("Frame register failed", err);
@@ -324,11 +297,11 @@ export default function FaceDashboard() {
 
     if (successCount > 0) {
       setHudStatus("success");
-      setHudMessage(`SUBJECT REGISTERED: ${successCount} SNAPSHOTS SAVED`);
+      setHudMessage(`BERHASIL: ${successCount} FOTO DISIMPAN`);
       setRegName("");
     } else {
       setHudStatus("failed");
-      setHudMessage("REGISTRATION FAILED. NO FACES DETECTED.");
+      setHudMessage("GAGAL. TIDAK ADA WAJAH.");
     }
     
     setTimeout(() => {
@@ -347,7 +320,7 @@ export default function FaceDashboard() {
     
     try {
       if (useLiveness) {
-        setHudMessage("ANALYZING BIO METRICS...");
+        setHudMessage("MENGECEK KEDIPAN MATA...");
         const frames: Blob[] = [];
         for (let i = 0; i < 15; i++) {
           const blob = await captureFrameAsync();
@@ -363,22 +336,18 @@ export default function FaceDashboard() {
           body: liveData,
         });
         
-        if (!liveRes.ok) {
-          let errorText = "";
-          try { errorText = await liveRes.text(); } catch(e) {}
-          throw new Error(`Liveness API error ${liveRes.status}: ${errorText.substring(0, 100)}`);
-        }
+        if (!liveRes.ok) throw new Error("Liveness Error");
         const liveDataJson = await liveRes.json();
         setLivenessResult(liveDataJson);
         
-        if (!liveRes.ok || !liveDataJson.is_live) {
+        if (!liveDataJson.is_live) {
           setHudStatus("failed");
-          setHudMessage("LIVENESS CHECK FAILED: SPOOF DETECTED");
-          return; // Stop pipeline
+          setHudMessage("AWAS! TERDETEKSI WAJAH PALSU!");
+          return; 
         }
       }
       
-      setHudMessage("EXTRACTING ARCFACE EMBEDDINGS...");
+      setHudMessage("MENGENALI WAJAH...");
       const blob = await captureFrameAsync();
       if (!blob) throw new Error("Capture failed");
       
@@ -390,69 +359,60 @@ export default function FaceDashboard() {
         body: formData,
       });
       
-      if (!res.ok) {
-        let errorText = "";
-        try { errorText = await res.text(); } catch(e) {}
-        throw new Error(`Recognize API error ${res.status}: ${errorText.substring(0, 100)}`);
-      }
-      
-      const data = await res.json();
       if (!res.ok) throw new Error("API Error");
       
+      const data = await res.json();
       const results: MatchResult[] = data.results || [];
       setMatchResults(results);
       drawBoundingBoxes(results);
 
       if (results.length === 0) {
         setHudStatus("failed");
-        setHudMessage("NO FACES DETECTED");
+        setHudMessage("TIDAK ADA WAJAH DETEKSI");
       } else {
         const matches = results.filter(r => r.is_match).length;
         setHudStatus(matches > 0 ? "success" : "failed");
-        setHudMessage(`MULTIPLE TARGETS: ${matches}/${results.length} IDENTIFIED`);
+        setHudMessage(`SELESAI: ${matches}/${results.length} DIKENALI`);
       }
       
     } catch (err) {
       setHudStatus("failed");
-      setHudMessage("SYSTEM ERROR");
+      setHudMessage("TERJADI KESALAHAN SISTEM");
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#05060A] text-white p-4 md:p-8 overflow-hidden relative">
-      {/* Dynamic Background */}
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[var(--primary-glow)]/20 via-[#05060A] to-[#05060A]" />
-      
+    <div ref={containerRef} className="min-h-screen p-4 md:p-8">
       <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-[var(--border)] pb-6 gap-4">
+        <header className="neo-header flex flex-col md:flex-row justify-between items-center mb-8 pb-6 gap-4 border-b-4 border-black border-dashed">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight uppercase flex items-center gap-3">
-              <Shield className="w-8 h-8 text-[var(--primary-light)]" />
-              Bio-Metric <span className="text-[var(--text-muted)] font-light">Terminal</span>
+            <h1 className="text-4xl font-black text-black flex items-center gap-3 drop-shadow-[2px_2px_0px_white]">
+              <ScanFace className="w-10 h-10 text-[var(--primary)] fill-[var(--primary)] border-2 border-black rounded-full" />
+              Pengenalan Wajah ✨
             </h1>
-            <p className="text-[var(--primary-light)] font-mono text-sm mt-1 tracking-widest opacity-80">
-              SYS.VER // 3.1.0_PRO_MULTI
+            <p className="text-gray-700 font-bold text-lg mt-2">
+              Verifikasi canggih dengan AI agar lebih aman! 🔒
             </p>
           </div>
           
-          <div className="flex gap-2 bg-black/40 p-1.5 rounded-xl border border-[var(--border)] backdrop-blur-md overflow-x-auto max-w-full">
+          <div className="flex gap-2 neo-card p-2">
             {[
-              { id: "SCAN", icon: ScanLine, label: "Scan" },
-              { id: "REGISTER", icon: UserPlus, label: "Register" },
-              { id: "DATABASE", icon: Database, label: "Database" }
+              { id: "SCAN", icon: ScanFace, label: "Scan" },
+              { id: "REGISTER", icon: UserPlus, label: "Daftar" },
+              { id: "DATABASE", icon: Database, label: "Data" }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setMode(tab.id as AppMode)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-sm uppercase transition-all duration-300 whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold uppercase transition-all duration-300 ${
                   mode === tab.id 
-                    ? "bg-[var(--primary)] text-white shadow-[0_0_15px_var(--primary-glow)]" 
-                    : "text-[var(--text-muted)] hover:text-white hover:bg-[var(--surface)]"
+                    ? "bg-[var(--secondary)] text-white border-2 border-black shadow-[4px_4px_0px_black] scale-105" 
+                    : "text-black hover:bg-[var(--primary-light)] border-2 border-transparent hover:border-black"
                 }`}
               >
-                <tab.icon className="w-4 h-4" />
+                <tab.icon className="w-5 h-5" />
                 <span>{tab.label}</span>
               </button>
             ))}
@@ -460,12 +420,12 @@ export default function FaceDashboard() {
         </header>
 
         {/* Source Selector Bar */}
-        <div className="mb-6 flex flex-wrap gap-4 items-center p-3 glass-card text-xs font-mono">
-          <div className="flex items-center gap-2 text-[var(--text-muted)]">
-            <Video className="w-4 h-4" /> SOURCE:
+        <div className="neo-header mb-8 flex flex-wrap gap-4 items-center p-4 neo-card bg-white">
+          <div className="flex items-center gap-2 text-black font-black">
+            <Video className="w-5 h-5" /> SUMBER KAMERA:
           </div>
           <select 
-            className="bg-black border border-[var(--border)] rounded px-2 py-1 text-white focus:outline-none focus:border-[var(--primary)]"
+            className="bg-gray-100 border-4 border-black rounded-xl px-4 py-2 text-black font-bold focus:outline-none focus:ring-4 focus:ring-[var(--primary)] cursor-pointer"
             value={videoFile ? "FILE" : selectedDeviceId || "default"}
             onChange={(e) => {
               if (e.target.value !== "FILE") {
@@ -474,15 +434,15 @@ export default function FaceDashboard() {
               }
             }}
           >
-            <option value="default">Default Camera</option>
+            <option value="default">Kamera Utama</option>
             {devices.map(d => (
-              <option key={d.deviceId} value={d.deviceId}>{d.label || `Camera ${d.deviceId.slice(0,5)}`}</option>
+              <option key={d.deviceId} value={d.deviceId}>{d.label || `Kamera ${d.deviceId.slice(0,5)}`}</option>
             ))}
-            <option value="FILE" disabled={!videoFile}>Local Video File...</option>
+            <option value="FILE" disabled={!videoFile}>Video Lokal (MP4)...</option>
           </select>
 
-          <label className="flex items-center gap-2 px-3 py-1 bg-[var(--surface)] border border-[var(--border)] rounded hover:bg-[var(--surface-hover)] cursor-pointer transition-colors">
-            <Upload className="w-3 h-3" /> UPLOAD MP4
+          <label className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)] border-4 border-black rounded-xl font-bold hover:-translate-y-1 hover:shadow-[4px_4px_0px_black] cursor-pointer transition-all">
+            <Upload className="w-4 h-4" /> UNGGAH MP4
             <input type="file" accept="video/mp4,video/webm" className="hidden" onChange={handleVideoUpload} />
           </label>
         </div>
@@ -491,11 +451,11 @@ export default function FaceDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Left: Camera Viewport */}
-          <div className="lg:col-span-7 flex flex-col gap-6">
+          <div className="neo-camera lg:col-span-7 flex flex-col gap-6">
             <ScannerHUD status={hudStatus} message={hudMessage}>
               <video 
                 ref={videoRef}
-                className="w-full h-full object-cover filter contrast-125 saturate-50"
+                className="w-full h-full object-cover"
                 playsInline 
                 muted
               />
@@ -504,77 +464,48 @@ export default function FaceDashboard() {
                 className="absolute top-0 left-0 w-full h-full pointer-events-none" 
               />
               {!isCameraActive && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-40 text-center p-6 backdrop-blur-sm">
-                  {hudMessage.includes("SECURITY_BLOCK") ? (
-                    <div className="flex flex-col items-center">
-                      <span className="animate-pulse font-mono text-[var(--accent-amber)] tracking-widest mb-2 font-bold text-xl">
-                        ⚠️ SECURE CONTEXT REQUIRED
-                      </span>
-                      <p className="text-sm font-mono text-white max-w-md mt-4 bg-black/60 p-4 rounded border border-[var(--accent-rose)] leading-relaxed">
-                        Browser blocks webcam on HTTP IP addresses (e.g. 192.168.x.x).<br/><br/>
-                        Please access this page via <strong className="text-[var(--accent-green)] text-lg">http://localhost:3000</strong> on your PC.
-                      </p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--primary-light)] z-40 text-center p-6 border-4 border-black">
+                  <div className="flex flex-col items-center gap-6">
+                    <div className="w-24 h-24 rounded-full border-4 border-black bg-white flex items-center justify-center shadow-[4px_4px_0px_black] animate-bounce">
+                      <Camera className="w-12 h-12 text-black" />
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-6">
-                      <div className="w-24 h-24 rounded-full border-2 border-dashed border-[var(--text-muted)] flex items-center justify-center">
-                        <Camera className="w-10 h-10 text-[var(--text-muted)]" />
-                      </div>
-                      <div className="font-mono text-[var(--text-muted)]">SYSTEM STANDBY</div>
-                      <button 
-                        onClick={requestCameraPermission}
-                        disabled={isRequestingCamera}
-                        className="relative z-50 pointer-events-auto px-6 py-3 bg-[var(--primary)] hover:bg-[var(--primary-light)] text-white font-bold rounded-lg tracking-widest font-mono transition-all shadow-[0_0_20px_var(--primary-glow)] disabled:opacity-50"
-                      >
-                        {isRequestingCamera ? "REQUESTING..." : "INITIALIZE HARDWARE"}
-                      </button>
-                    </div>
-                  )}
+                    <div className="font-black text-2xl text-black">KAMERA MATI</div>
+                    <button 
+                      onClick={requestCameraPermission}
+                      disabled={isRequestingCamera}
+                      className="btn-neo text-lg py-4 px-8"
+                    >
+                      {isRequestingCamera ? "MEMINTA IZIN..." : "NYALAKAN KAMERA 📸"}
+                    </button>
+                  </div>
                 </div>
               )}
             </ScannerHUD>
             <canvas ref={canvasRef} className="hidden" />
 
-            <AnimatePresence>
-              {useLiveness && (mode === "SCAN") && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                >
-                  <LivenessIndicator 
-                    isActive={true}
-                    isLive={livenessResult?.is_live ?? null}
-                    message={livenessResult?.message || "LIVENESS_MODULE_ACTIVE"}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {useLiveness && (mode === "SCAN") && (
+              <LivenessIndicator 
+                isActive={true}
+                isLive={livenessResult?.is_live ?? null}
+                message={livenessResult?.message || "Deteksi Kedipan Aktif 👀"}
+              />
+            )}
           </div>
 
           {/* Right: Contextual Panel */}
           <div className="lg:col-span-5">
-            <AnimatePresence mode="wait">
-              
               {/* SCAN MODE */}
               {mode === "SCAN" && (
-                <motion.div 
-                  key="scan"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="h-full flex flex-col gap-6"
-                >
-                  <div className="glass-card p-6">
-                    <h2 className="font-mono text-[var(--primary-light)] text-sm mb-4 uppercase tracking-widest flex items-center justify-between">
-                      <span>// Operation Parameters</span>
+                <div className="neo-panel h-full flex flex-col gap-6">
+                  <div className="neo-card p-6 bg-[var(--secondary-light)]">
+                    <h2 className="font-black text-xl mb-4 flex items-center justify-between text-black">
+                      <span>Pengaturan AI ⚙️</span>
                     </h2>
                     
-                    {/* Threshold Slider (Cyberpunk Style) */}
-                    <div className="mb-6 bg-black/40 p-4 rounded-xl border border-[var(--border)]">
-                      <div className="flex justify-between font-mono text-xs mb-2">
-                        <span className="text-[var(--text-muted)]">SIMILARITY THRESHOLD</span>
-                        <span className="font-bold" style={{ color: threshold > 0.5 ? "var(--accent-green)" : threshold < 0.4 ? "var(--accent-rose)" : "var(--accent-amber)" }}>
+                    <div className="mb-6 bg-white p-4 rounded-xl border-4 border-black shadow-[4px_4px_0px_black]">
+                      <div className="flex justify-between font-black mb-2 text-black">
+                        <span>Batas Kemiripan</span>
+                        <span className="bg-black text-white px-2 py-1 rounded-lg">
                           {(threshold * 100).toFixed(0)}%
                         </span>
                       </div>
@@ -584,28 +515,19 @@ export default function FaceDashboard() {
                         value={threshold} 
                         onChange={(e) => setThreshold(parseFloat(e.target.value))}
                         disabled={hudStatus === "scanning"}
-                        className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer"
-                        style={{
-                          background: `linear-gradient(to right, 
-                            var(--accent-rose) 0%, 
-                            var(--accent-rose) 30%, 
-                            var(--accent-amber) 40%, 
-                            var(--accent-amber) 50%, 
-                            var(--accent-green) 60%, 
-                            var(--accent-green) 100%)`
-                        }}
+                        className="w-full h-4 bg-gray-200 rounded-lg appearance-none cursor-pointer border-2 border-black accent-[var(--secondary)]"
                       />
-                      <div className="flex justify-between text-[10px] font-mono text-[var(--text-muted)] mt-1">
-                        <span>STRICT</span>
-                        <span>BALANCED</span>
-                        <span>LOOSE</span>
+                      <div className="flex justify-between text-xs font-bold text-gray-500 mt-2">
+                        <span>Sangat Ketat</span>
+                        <span>Normal</span>
+                        <span>Mudah</span>
                       </div>
                     </div>
                     
-                    <label className="flex items-center justify-between cursor-pointer p-4 rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] hover:border-[var(--primary)]/50 transition-colors">
+                    <label className="flex items-center justify-between cursor-pointer p-4 rounded-xl border-4 border-black bg-white hover:-translate-y-1 hover:shadow-[4px_4px_0px_black] transition-all mb-6">
                       <div>
-                        <div className="font-bold text-white mb-1">Require Liveness</div>
-                        <div className="text-xs text-[var(--text-muted)]">Analyze blinks to prevent spoofing</div>
+                        <div className="font-black text-black text-lg mb-1">Cek Anti-Palsu</div>
+                        <div className="text-sm font-bold text-gray-500">Wajibkan berkedip ke kamera</div>
                       </div>
                       <div className="relative">
                         <input 
@@ -615,33 +537,24 @@ export default function FaceDashboard() {
                           onChange={(e) => setUseLiveness(e.target.checked)}
                           disabled={hudStatus === "scanning"}
                         />
-                        <div className="w-11 h-6 bg-black border border-[var(--border)] rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--primary)] peer-checked:border-[var(--primary)]"></div>
+                        <div className="w-14 h-8 bg-gray-300 border-4 border-black rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-2 after:border-black after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--accent-green)]"></div>
                       </div>
                     </label>
 
                     <button 
                       onClick={handleRecognize}
                       disabled={hudStatus === "scanning" || !isCameraActive}
-                      className="w-full mt-6 py-4 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-xl font-bold uppercase tracking-widest text-white shadow-[0_0_30px_var(--primary-glow)] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                      className="w-full btn-neo bg-[var(--accent-pink)] text-white text-xl py-5 hover:bg-[#F687B3]"
                     >
-                      {hudStatus === "scanning" ? "PROCESSING..." : "INITIATE SCAN"}
+                      {hudStatus === "scanning" ? "MEMPROSES..." : "MULAI SCAN 🔍"}
                     </button>
                   </div>
 
                   {/* Multi-Target Result Holograms */}
                   {matchResults.length > 0 && (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex-1 overflow-y-auto space-y-4 max-h-[600px] scrollbar-hide"
-                    >
+                    <div className="flex-1 overflow-y-auto space-y-4 max-h-[600px] p-2">
                       {matchResults.map((res, idx) => (
-                        <motion.div 
-                          key={idx}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: idx * 0.1 }}
-                        >
+                        <div key={idx} className="neo-panel">
                           <HoloCard 
                             name={res.name}
                             similarity={res.similarity}
@@ -649,98 +562,86 @@ export default function FaceDashboard() {
                             message={res.message}
                             alignedFaceB64={res.aligned_face_b64}
                           />
-                        </motion.div>
+                        </div>
                       ))}
-                    </motion.div>
+                    </div>
                   )}
-                </motion.div>
+                </div>
               )}
 
               {/* REGISTER MODE */}
               {mode === "REGISTER" && (
-                <motion.div 
-                  key="register"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="glass-card p-6"
-                >
-                  <h2 className="font-mono text-[var(--secondary)] text-sm mb-6 uppercase tracking-widest flex items-center justify-between">
-                    <span>// Guided Subject Enrollment</span>
+                <div className="neo-panel neo-card p-6 bg-[var(--accent-purple)] text-white">
+                  <h2 className="font-black text-2xl mb-6 text-white drop-shadow-[2px_2px_0px_black]">
+                    Pendaftaran Wajah Baru 📝
                   </h2>
                   
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-xs font-mono text-[var(--text-muted)] mb-2 uppercase">Subject ID</label>
+                      <label className="block text-lg font-black mb-2 text-white drop-shadow-[1px_1px_0px_black]">NAMA (ID):</label>
                       <input
                         type="text"
                         value={regName}
                         onChange={(e) => setRegName(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""))}
-                        placeholder="e.g. john_doe"
+                        placeholder="contoh: joko_123"
                         disabled={hudStatus === "scanning"}
-                        className="w-full bg-black border border-[var(--border)] rounded-xl px-4 py-3 font-mono text-white focus:outline-none focus:border-[var(--secondary)] focus:ring-1 focus:ring-[var(--secondary)] uppercase disabled:opacity-50"
+                        className="w-full bg-white border-4 border-black rounded-xl px-4 py-4 font-bold text-black focus:outline-none focus:ring-4 focus:ring-[var(--primary)] uppercase"
                       />
                     </div>
                     
                     <button 
                       onClick={handleGuidedRegister}
                       disabled={hudStatus === "scanning" || !regName || !isCameraActive}
-                      className="w-full py-4 bg-[var(--surface-hover)] border border-[var(--secondary)] rounded-xl font-bold uppercase tracking-widest text-[var(--secondary)] hover:bg-[var(--secondary)] hover:text-black shadow-[0_0_20px_rgba(6,182,212,0.1)] hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                      className="w-full py-4 btn-neo bg-[var(--primary)] text-black border-4 border-black hover:bg-[var(--primary-light)]"
                     >
-                      START ENROLLMENT (10 POSES)
+                      MULAI REKAM (10 GAYA) 🎬
                     </button>
                     
-                    <div className="p-4 bg-[var(--accent-amber)]/10 border border-[var(--accent-amber)]/30 rounded-xl text-xs text-[var(--accent-amber)] font-mono leading-relaxed">
-                      <strong className="block mb-1">INSTRUCTIONS:</strong>
-                      System will take 10 snapshots automatically over 10 seconds. Follow the on-screen HUD directions to turn your head. Do not move too fast.
+                    <div className="p-4 bg-white border-4 border-black rounded-xl text-black font-bold">
+                      <strong className="block mb-2 text-xl underline">PETUNJUK:</strong>
+                      Kamera akan mengambil 10 foto secara otomatis dalam 10 detik. Ikuti teks di layar untuk menoleh perlahan ke kiri dan ke kanan. Jangan bergerak terlalu cepat!
                     </div>
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {/* DATABASE MODE */}
               {mode === "DATABASE" && (
-                <motion.div 
-                  key="database"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="glass-card p-6 h-full flex flex-col max-h-[800px]"
-                >
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="font-mono text-[var(--primary-light)] text-sm uppercase tracking-widest">
-                      // Neural Database
+                <div className="neo-panel neo-card p-6 h-full flex flex-col max-h-[800px] bg-white">
+                  <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+                    <h2 className="font-black text-2xl text-black">
+                      Data Wajah 🗃️
                     </h2>
                     <button 
                       onClick={rebuildDatabase}
                       disabled={isProcessingDB}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--primary)]/50 text-[var(--primary-light)] hover:bg-[var(--primary)]/20 transition-colors font-mono text-xs"
+                      className="btn-neo py-2 px-4 bg-[var(--accent-green)] text-white text-sm"
                     >
-                      <RefreshCw className={`w-3 h-3 ${isProcessingDB ? "animate-spin" : ""}`} />
-                      COMPILE DB
+                      <RefreshCw className={`w-4 h-4 ${isProcessingDB ? "animate-spin" : ""}`} />
+                      SINKRONISASI AI
                     </button>
                   </div>
                   
-                  <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-hide">
+                  <div className="flex-1 overflow-y-auto space-y-4 pr-2">
                     {identities.length === 0 ? (
-                      <div className="h-full flex items-center justify-center text-[var(--text-muted)] font-mono text-sm border-2 border-dashed border-[var(--border)] rounded-xl">
-                        DATABASE_EMPTY
+                      <div className="h-40 flex items-center justify-center text-gray-500 font-bold border-4 border-dashed border-gray-300 rounded-2xl text-xl">
+                        KOSONG MELOMPONG 🏜️
                       </div>
                     ) : (
                       identities.map((id, idx) => (
-                        <div key={idx} className="flex justify-between items-center p-4 bg-black/40 border border-[var(--border)] rounded-xl hover:border-[var(--primary)]/30 transition-colors">
+                        <div key={idx} className="flex justify-between items-center p-4 bg-[var(--primary-light)] border-4 border-black rounded-2xl shadow-[4px_4px_0px_black]">
                           <div>
-                            <div className="font-mono font-bold text-white uppercase">{id.name}</div>
-                            <div className="text-xs text-[var(--text-muted)] font-mono mt-1">SAMPLES: {id.photo_count}/10</div>
+                            <div className="font-black text-xl text-black uppercase">{id.name}</div>
+                            <div className="font-bold text-gray-700 mt-1 bg-white px-2 py-1 rounded border-2 border-black inline-block text-xs">FOTO: {id.photo_count}/10</div>
                           </div>
                           <div>
                             {id.has_embedding ? (
-                              <div className="px-2 py-1 bg-[var(--accent-green)]/10 text-[var(--accent-green)] border border-[var(--accent-green)]/30 rounded text-[10px] font-mono font-bold">
-                                ACTIVE
+                              <div className="px-3 py-2 bg-[var(--accent-green)] text-white border-2 border-black rounded-xl font-black text-sm rotate-2 shadow-[2px_2px_0px_black]">
+                                SIAP DIPAKAI!
                               </div>
                             ) : (
-                              <div className="px-2 py-1 bg-[var(--accent-amber)]/10 text-[var(--accent-amber)] border border-[var(--accent-amber)]/30 rounded text-[10px] font-mono font-bold">
-                                UNCOMPILED
+                              <div className="px-3 py-2 bg-[var(--accent-rose)] text-white border-2 border-black rounded-xl font-black text-sm -rotate-2 shadow-[2px_2px_0px_black]">
+                                BELUM DISINKRON
                               </div>
                             )}
                           </div>
@@ -748,9 +649,8 @@ export default function FaceDashboard() {
                       ))
                     )}
                   </div>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
           </div>
           
         </div>

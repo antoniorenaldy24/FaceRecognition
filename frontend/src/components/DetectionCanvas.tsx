@@ -40,48 +40,56 @@ export default function DetectionCanvas({ imageUrl, detections }: DetectionCanva
         const width = x2 - x1;
         const height = y2 - y1;
 
-        // Set styles based on class
-        let color = "#FF0000"; // default red
+        // Set styles based on class (Neobrutalism colors)
+        let color = "#000000"; 
+        let bgColor = "#ED64A6"; // Pink for bicycle
         if (det.label_name.toLowerCase() === "person") {
-          color = "#00BFFF"; // cyan
-        } else if (det.label_name.toLowerCase() === "bicycle") {
-          color = "#00FF7F"; // green
+          bgColor = "#48BB78"; // Green for person
         }
 
         // Draw rectangle
         ctx.strokeStyle = color;
-        ctx.lineWidth = Math.max(3, image.width * 0.005);
+        ctx.lineWidth = Math.max(4, image.width * 0.008);
         ctx.strokeRect(x1, y1, width, height);
+        
+        // Draw inner border for that pop effect
+        ctx.strokeStyle = bgColor;
+        ctx.lineWidth = Math.max(2, image.width * 0.004);
+        ctx.strokeRect(x1 + 2, y1 + 2, width - 4, height - 4);
 
         // Draw label background
-        const text = `${det.label_name} ${(det.score * 100).toFixed(1)}%`;
-        ctx.font = `bold ${Math.max(16, image.width * 0.02)}px Inter, sans-serif`;
+        const text = `${det.label_name === "person" ? "👤 Orang" : "🚲 Sepeda"} ${(det.score * 100).toFixed(1)}%`;
+        ctx.font = `900 ${Math.max(18, image.width * 0.025)}px Nunito, sans-serif`;
         const textMetrics = ctx.measureText(text);
         const textWidth = textMetrics.width;
         const textHeight = parseInt(ctx.font, 10);
 
-        ctx.fillStyle = color;
+        ctx.fillStyle = bgColor;
         // background padding
-        ctx.fillRect(x1 - ctx.lineWidth/2, y1 - textHeight - 10, textWidth + 10, textHeight + 10);
+        ctx.fillRect(x1 - ctx.lineWidth/2, y1 - textHeight - 16, textWidth + 20, textHeight + 16);
+        
+        // Label border
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = Math.max(2, image.width * 0.004);
+        ctx.strokeRect(x1 - ctx.lineWidth/2, y1 - textHeight - 16, textWidth + 20, textHeight + 16);
 
         // Draw label text
         ctx.fillStyle = "#000000"; // Black text on colored background for contrast
-        ctx.fillText(text, x1 + 5, y1 - 5);
+        ctx.fillText(text, x1 + 10, y1 - 8);
       });
     };
   }, [imageUrl, detections]);
 
   return (
-    <div ref={containerRef} className="relative w-full overflow-hidden rounded-xl bg-[var(--surface)] flex justify-center border border-[var(--border)] shadow-xl shadow-black/50">
-      {/* We use object-contain to make sure the canvas scales correctly within its container while maintaining aspect ratio */}
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden flex justify-center items-center">
       <canvas
         ref={canvasRef}
-        className="max-w-full max-h-[70vh] object-contain"
+        className="max-w-full max-h-[70vh] object-contain rounded-lg"
         style={{ display: imageUrl ? "block" : "none" }}
       />
       {!imageUrl && (
-        <div className="w-full h-64 flex items-center justify-center text-[var(--text-muted)]">
-          No image to display
+        <div className="w-full h-64 flex items-center justify-center font-bold text-gray-500">
+          Tidak ada gambar untuk ditampilkan
         </div>
       )}
     </div>
