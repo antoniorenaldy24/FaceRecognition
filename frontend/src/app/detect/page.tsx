@@ -5,7 +5,7 @@ import { Loader2, Upload, SlidersHorizontal, AlertTriangle, Cpu } from "lucide-r
 import ImageDropzone from "@/components/ImageDropzone";
 import DetectionCanvas from "@/components/DetectionCanvas";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://renaldyant-facerecognition-api.hf.space";
 
 interface Detection {
   bbox: [number, number, number, number];
