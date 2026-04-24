@@ -63,7 +63,15 @@ async def lifespan(app: FastAPI):
         face_engine = FaceEngine.get_instance()
         face_engine.initialize(ctx_id=ctx_id)
     except Exception as e:
-        print(f"[Startup] Face engine init failed (non-critical): {e}")
+        print(f"[Startup] Face engine init failed: {e}")
+        import traceback
+        traceback.print_exc()
+        try:
+            import onnxruntime
+            print("[Startup] onnxruntime imported successfully despite previous error!")
+        except Exception as onnx_err:
+            print("[Startup] FATAL: onnxruntime import failed with error:")
+            traceback.print_exc()
         print("[Startup] Face recognition will be unavailable.")
 
     print("\n" + "=" * 60)
