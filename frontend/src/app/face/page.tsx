@@ -66,9 +66,9 @@ export default function FaceDashboard() {
 
   // Entrance animations
   useGSAP(() => {
-    gsap.from(".neo-header", { y: -50, opacity: 0, duration: 0.8, ease: "back.out(1.5)" });
-    gsap.from(".neo-panel", { x: 50, opacity: 0, duration: 0.8, stagger: 0.1, ease: "power2.out" });
-    gsap.from(".neo-camera", { scale: 0.9, opacity: 0, duration: 0.8, ease: "elastic.out(1, 0.5)" });
+    gsap.to(".neo-header", { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.5)", clearProps: "all" });
+    gsap.to(".neo-panel", { x: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power2.out", clearProps: "all" });
+    gsap.to(".neo-camera", { scale: 1, opacity: 1, duration: 0.8, ease: "elastic.out(1, 0.5)", clearProps: "all" });
   }, { scope: containerRef });
 
   useEffect(() => {
@@ -386,7 +386,7 @@ export default function FaceDashboard() {
       <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Header */}
-        <header className="neo-header flex flex-col md:flex-row justify-between items-center mb-8 pb-6 gap-4 border-b-4 border-black border-dashed">
+        <header className="neo-header opacity-0 translate-y-[-50px] flex flex-col md:flex-row justify-between items-center mb-8 pb-6 gap-4 border-b-4 border-black border-dashed">
           <div>
             <h1 className="text-4xl font-black text-black flex items-center gap-3 drop-shadow-[2px_2px_0px_white]">
               <ScanFace className="w-10 h-10 text-[var(--primary)] fill-[var(--primary)] border-2 border-black rounded-full" />
@@ -420,7 +420,7 @@ export default function FaceDashboard() {
         </header>
 
         {/* Source Selector Bar */}
-        <div className="neo-header mb-8 flex flex-wrap gap-4 items-center p-4 neo-card bg-white">
+        <div className="neo-header opacity-0 translate-y-[-50px] mb-8 flex flex-wrap gap-4 items-center p-4 neo-card bg-white">
           <div className="flex items-center gap-2 text-black font-black">
             <Video className="w-5 h-5" /> SUMBER KAMERA:
           </div>
@@ -451,7 +451,7 @@ export default function FaceDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Left: Camera Viewport */}
-          <div className="neo-camera lg:col-span-7 flex flex-col gap-6">
+          <div className="neo-camera opacity-0 scale-90 lg:col-span-7 flex flex-col gap-6">
             <ScannerHUD status={hudStatus} message={hudMessage}>
               <video 
                 ref={videoRef}
@@ -496,7 +496,7 @@ export default function FaceDashboard() {
           <div className="lg:col-span-5">
               {/* SCAN MODE */}
               {mode === "SCAN" && (
-                <div className="neo-panel h-full flex flex-col gap-6">
+                <div className="neo-panel opacity-0 translate-x-[50px] h-full flex flex-col gap-6">
                   <div className="neo-card p-6 bg-[var(--secondary-light)]">
                     <h2 className="font-black text-xl mb-4 flex items-center justify-between text-black">
                       <span>Pengaturan AI ⚙️</span>
@@ -571,7 +571,7 @@ export default function FaceDashboard() {
 
               {/* REGISTER MODE */}
               {mode === "REGISTER" && (
-                <div className="neo-panel neo-card p-6 bg-[var(--accent-purple)] text-white">
+                <div className="neo-panel opacity-0 translate-x-[50px] neo-card p-6 bg-[var(--accent-purple)] text-white">
                   <h2 className="font-black text-2xl mb-6 text-white drop-shadow-[2px_2px_0px_black]">
                     Pendaftaran Wajah Baru 📝
                   </h2>
@@ -607,7 +607,7 @@ export default function FaceDashboard() {
 
               {/* DATABASE MODE */}
               {mode === "DATABASE" && (
-                <div className="neo-panel neo-card p-6 h-full flex flex-col max-h-[800px] bg-white">
+                <div className="neo-panel opacity-0 translate-x-[50px] neo-card p-6 h-full flex flex-col max-h-[800px] bg-white">
                   <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
                     <h2 className="font-black text-2xl text-black">
                       Data Wajah 🗃️

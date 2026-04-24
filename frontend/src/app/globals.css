@@ -40,9 +40,6 @@ body {
   font-family: var(--font-nunito), sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
-  /* Fun background pattern (polka dots) */
-  background-image: radial-gradient(#E5E7EB 2px, transparent 2px);
-  background-size: 32px 32px;
 }
 
 /* Scrollbar */

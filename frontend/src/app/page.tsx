@@ -50,30 +50,33 @@ export default function HomePage() {
     const tl = gsap.timeline();
     
     // Animate Hero Text
-    tl.from(".hero-text", {
-      y: 100,
-      opacity: 0,
+    tl.to(".hero-text", {
+      y: 0,
+      opacity: 1,
       duration: 1,
       stagger: 0.2,
       ease: "back.out(1.7)",
+      clearProps: "all"
     });
 
     // Animate Buttons
-    tl.from(".hero-btn", {
-      scale: 0,
-      opacity: 0,
+    tl.to(".hero-btn", {
+      scale: 1,
+      opacity: 1,
       duration: 0.6,
       stagger: 0.1,
       ease: "elastic.out(1, 0.5)",
+      clearProps: "all"
     }, "-=0.4");
 
     // Animate Feature Cards
-    tl.from(".feature-card", {
-      y: 50,
-      opacity: 0,
+    tl.to(".feature-card", {
+      y: 0,
+      opacity: 1,
       duration: 0.8,
       stagger: 0.15,
       ease: "back.out(1.2)",
+      clearProps: "all"
     }, "-=0.2");
     
     // Floating animation for icons inside cards
@@ -93,28 +96,28 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="text-center mb-24 mt-10">
         {/* Badge */}
-        <div className="hero-text inline-flex items-center gap-3 px-6 py-3 rounded-full neo-card font-bold text-black mb-8 border-2">
+        <div className="hero-text opacity-0 translate-y-12 inline-flex items-center gap-3 px-6 py-3 rounded-full neo-card font-bold text-black mb-8 border-2">
           <span className="w-4 h-4 rounded-full bg-[var(--accent-rose)] border-2 border-black animate-pulse"></span>
           Modul 2 — Praktikum Machine Learning
         </div>
 
         <h1 className="text-6xl md:text-8xl font-black tracking-tight mb-8 text-black drop-shadow-[4px_4px_0px_white]">
-          <span className="hero-text block mb-2">Laboratorium</span>
-          <span className="hero-text inline-block bg-[var(--primary)] px-6 py-2 rounded-2xl border-4 border-black shadow-[8px_8px_0px_black] rotate-2">
+          <span className="hero-text opacity-0 translate-y-12 block mb-2">Laboratorium</span>
+          <span className="hero-text opacity-0 translate-y-12 inline-block bg-[var(--primary)] px-6 py-2 rounded-2xl border-4 border-black shadow-[8px_8px_0px_black] rotate-2">
             Visi Mesin!
           </span>
         </h1>
 
-        <p className="hero-text text-xl md:text-2xl text-gray-800 font-bold max-w-3xl mx-auto mb-12 leading-relaxed">
+        <p className="hero-text opacity-0 translate-y-12 text-xl md:text-2xl text-gray-800 font-bold max-w-3xl mx-auto mb-12 leading-relaxed">
           Platform komputer cerdas yang bisa melihat dan mengenali objek seperti manusia. Ditenagai oleh keajaiban AI terbaru! ✨
         </p>
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-          <Link href="/detect" className="hero-btn btn-neo text-lg px-8 py-4 bg-[var(--secondary)] text-white hover:bg-[var(--secondary-light)]">
+          <Link href="/detect" className="hero-btn opacity-0 scale-50 btn-neo text-lg px-8 py-4 bg-[var(--secondary)] text-white hover:bg-[var(--secondary-light)]">
             <span className="text-2xl">🎯</span> Coba Deteksi Objek
           </Link>
-          <Link href="/face" className="hero-btn btn-neo text-lg px-8 py-4 bg-[var(--accent-pink)] text-white hover:bg-[#F687B3]">
+          <Link href="/face" className="hero-btn opacity-0 scale-50 btn-neo text-lg px-8 py-4 bg-[var(--accent-pink)] text-white hover:bg-[#F687B3]">
             <span className="text-2xl">👤</span> Pengenalan Wajah
           </Link>
         </div>
@@ -127,7 +130,7 @@ export default function HomePage() {
             <Link
               key={feature.title}
               href={feature.href}
-              className={`feature-card neo-card p-8 group flex flex-col items-center text-center ${feature.color}`}
+              className={`feature-card opacity-0 translate-y-12 neo-card p-8 group flex flex-col items-center text-center ${feature.color}`}
             >
               {/* Icon */}
               <div className="floating-icon w-20 h-20 rounded-full bg-white border-4 border-black shadow-[4px_4px_0px_black] flex items-center justify-center text-4xl mb-6">
@@ -158,7 +161,7 @@ export default function HomePage() {
           {techStack.map((tech) => (
             <div
               key={tech.name}
-              className="feature-card flex items-center gap-3 px-6 py-3 rounded-2xl bg-white border-4 border-black shadow-[4px_4px_0px_black] font-bold text-lg hover:-translate-y-2 hover:shadow-[6px_6px_0px_black] transition-all cursor-default"
+              className="feature-card opacity-0 translate-y-12 flex items-center gap-3 px-6 py-3 rounded-2xl bg-white border-4 border-black shadow-[4px_4px_0px_black] font-bold text-lg hover:-translate-y-2 hover:shadow-[6px_6px_0px_black] transition-all cursor-default"
             >
               <span className="text-2xl">{tech.icon}</span>
               <span>{tech.name}</span>

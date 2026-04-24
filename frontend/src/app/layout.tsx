@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import InteractiveBackground from "@/components/InteractiveBackground";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -31,6 +32,7 @@ export default function RootLayout({
   return (
     <html lang="id" className="light">
       <body className={`${nunito.variable} antialiased bg-[var(--background)] font-sans`}>
+        <InteractiveBackground />
         <div className="min-h-screen">
           <Navbar />
           <main>{children}</main>

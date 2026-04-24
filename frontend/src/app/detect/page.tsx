@@ -36,33 +36,39 @@ export default function DetectPage() {
   useGSAP(() => {
     const tl = gsap.timeline();
     
-    tl.from(".header-anim", {
-      y: -50,
-      opacity: 0,
+    tl.to(".header-anim", {
+      y: 0,
+      opacity: 1,
       duration: 0.8,
       stagger: 0.2,
-      ease: "back.out(1.5)"
+      ease: "back.out(1.5)",
+      clearProps: "all"
     });
 
-    tl.from(".card-anim", {
-      scale: 0.9,
-      opacity: 0,
+    tl.to(".card-anim", {
+      scale: 1,
+      opacity: 1,
       duration: 0.6,
       stagger: 0.2,
-      ease: "back.out(1.2)"
+      ease: "back.out(1.2)",
+      clearProps: "all"
     }, "-=0.4");
   }, { scope: containerRef });
 
   // Add GSAP pop-in for results
   useGSAP(() => {
     if (results) {
-      gsap.from(".result-row", {
-        x: -50,
-        opacity: 0,
-        duration: 0.5,
-        stagger: 0.1,
-        ease: "back.out(1.2)"
-      });
+      gsap.fromTo(".result-row", 
+        { x: -50, opacity: 0 },
+        {
+          x: 0,
+          opacity: 1,
+          duration: 0.5,
+          stagger: 0.1,
+          ease: "back.out(1.2)",
+          clearProps: "all"
+        }
+      );
     }
   }, [results]);
 
@@ -113,7 +119,7 @@ export default function DetectPage() {
 
   return (
     <div ref={containerRef} className="max-w-7xl mx-auto px-6 py-12">
-      <div className="mb-10 header-anim">
+      <div className="mb-10 header-anim opacity-0 translate-y-[-50px]">
         <h1 className="text-5xl font-black text-black mb-4 drop-shadow-[2px_2px_0px_white]">
           Deteksi <span className="text-white bg-[var(--secondary)] px-4 py-1 rounded-xl border-4 border-black shadow-[4px_4px_0px_black] rotate-2 inline-block">Objek</span>
         </h1>
@@ -125,7 +131,7 @@ export default function DetectPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Upload & Controls */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="card-anim neo-card p-6 bg-[var(--primary-light)]">
+          <div className="card-anim opacity-0 scale-90 neo-card p-6 bg-[var(--primary-light)]">
             <h2 className="text-2xl font-black text-black mb-4">Input Gambar 🖼️</h2>
             <ImageDropzone onImageDrop={handleImageDrop} isLoading={isLoading} />
             
@@ -136,7 +142,7 @@ export default function DetectPage() {
             )}
           </div>
 
-          <div className="card-anim neo-card p-6 bg-[var(--accent-pink)]">
+          <div className="card-anim opacity-0 scale-90 neo-card p-6 bg-[var(--accent-pink)]">
             <h2 className="text-2xl font-black text-white mb-4 drop-shadow-[2px_2px_0px_black]">Pengaturan 🎛️</h2>
             
             <div className="mb-4 bg-white p-4 rounded-xl border-4 border-black shadow-[4px_4px_0px_black]">
@@ -181,7 +187,7 @@ export default function DetectPage() {
 
         {/* Right Column: Results */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="card-anim neo-card p-6 min-h-[500px] flex flex-col bg-white">
+          <div className="card-anim opacity-0 scale-90 neo-card p-6 min-h-[500px] flex flex-col bg-white">
             <h2 className="text-2xl font-black text-black mb-4 flex flex-wrap items-center justify-between gap-4">
               <span>Hasil Deteksi 🔍</span>
               {results && (
@@ -214,7 +220,7 @@ export default function DetectPage() {
           
           {/* Results Details Table */}
           {results && results.num_detections > 0 && (
-            <div className="card-anim neo-card p-6 bg-[var(--secondary-light)]">
+            <div className="card-anim opacity-0 scale-90 neo-card p-6 bg-[var(--secondary-light)]">
               <h3 className="text-xl font-black text-black mb-4">Detail Objek 📋</h3>
               <div className="overflow-x-auto rounded-xl border-4 border-black bg-white shadow-[4px_4px_0px_black]">
                 <table className="w-full text-left text-base font-bold text-black">
